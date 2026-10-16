@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rate the Deck · BRYC Future You</title>
+<style>:root {
+  --gold: #c9a800; --gold-light: #f0c917; --gold-pale: #fef9e0;
+  --black: #1a1a1a; --white: #ffffff;
+  --pink: #ed125f; --pink-dark: #d51056;
+  --gray-100: #f5f5f5; --gray-200: #e8e8e8; --gray-400: #666;
+  --gray-600: #444; --gray-800: #1a1a1a;
+  --radius: 12px; --shadow: 0 2px 8px rgba(0,0,0,.08);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: ProximaNova, sans-serif; background: #f7f7f5; color: var(--black); min-height: 100vh; }
+#app { min-height: 100vh; }
+.screen { display: none; }
+.screen.active { display: flex; flex-direction: column; min-height: 100vh; }
+
+/* LANDING */
+.landing-header { background: #fff; padding: 32px 24px 0; text-align: center; }
+.bryc-wordmark { font-weight: 900; font-size: 12px; letter-spacing: .18em; color: var(--gold); text-transform: uppercase; margin-bottom: 4px; }
+.landing-title { font-weight: 900; font-size: clamp(28px,6vw,48px); color: var(--black); line-height: 1.05; margin-bottom: 6px; }
+.landing-title span { color: var(--gold); }
+.landing-sub { font-size: 14px; color: var(--gray-400); margin-bottom: 32px; }
+
+
+
+.divider-row { display: flex; align-items: center; gap: 12px; padding: 28px 24px 0; }
+.divider-line { flex: 1; height: 1px; background: #1e1e1e; }
+.divider-text { font-size: 11px; color: var(--gray-400); letter-spacing: .08em; text-transform: uppercase; font-weight: 700; }
+
+.login-card { margin: 20px 24px 32px; background: #fff; border-radius: var(--radius); padding: 24px; border: 1px solid #e0e0e0; box-shadow: var(--shadow); }
+.login-card h3 { font-size: 15px; font-weight: 800; color: var(--black); margin-bottom: 14px; }
+
+.role-tabs { display: flex; gap: 6px; margin-bottom: 14px; }
+.role-tab { flex: 1; padding: 8px 4px; border-radius: 6px; border: 1.5px solid #333; background: transparent; color: var(--gray-400); font-family: ProximaNova, sans-serif; font-size: 11px; font-weight: 700; cursor: pointer; text-transform: uppercase; letter-spacing: .06em; transition: all .15s; }
+.role-tab.active { border-color: var(--gold); background: rgba(240,201,23,.1); color: var(--gold); }
+
+.search-wrap { position: relative; margin-bottom: 12px; }
+.search-input { width: 100%; padding: 12px 16px; border-radius: 8px; border: 1.5px solid #ddd; background: #fafafa; color: var(--black); font-family: ProximaNova, sans-serif; font-size: 15px; outline: none; transition: border-color .15s; }
+.search-input::placeholder { color: #aaa; }
+.search-input:focus { border-color: var(--gold); }
+.fellow-dropdown { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #fff; border: 1.5px solid #ddd; border-radius: 8px; max-height: 210px; overflow-y: auto; z-index: 100; display: none; box-shadow: 0 4px 16px rgba(0,0,0,.1); }
+.fellow-dropdown.open { display: block; }
+.fellow-option { padding: 10px 16px; font-size: 14px; cursor: pointer; color: var(--black); display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #f0f0f0; transition: background .1s; }
+.fellow-option:last-child { border-bottom: none; }
+.fellow-option:hover { background: #fef9e0; }
+.grade-badge { font-size: 11px; font-weight: 700; color: var(--gold); background: rgba(240,201,23,.12); padding: 2px 8px; border-radius: 20px; }
+
+.selected-fellow { background: var(--gold-pale); border: 1.5px solid var(--gold); border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; display: none; align-items: center; justify-content: space-between; }
+.selected-fellow.visible { display: flex; }
+.selected-fellow-name { font-weight: 700; font-size: 14px; color: var(--black); }
+.selected-fellow-grade { font-size: 12px; color: var(--gold); font-weight: 700; }
+.clear-btn { background: none; border: none; color: #999; cursor: pointer; font-size: 20px; line-height: 1; padding: 0 2px; }
+
+.pin-input { width: 100%; padding: 12px 16px; border-radius: 8px; border: 1.5px solid #ddd; background: #fafafa; color: var(--black); font-family: ProximaNova, sans-serif; font-size: 15px; letter-spacing: .2em; outline: none; transition: border-color .15s; margin-bottom: 12px; }
+.pin-input:focus { border-color: var(--gold); }
+.pin-input::placeholder { letter-spacing: normal; color: #aaa; }
+
+.btn-primary { width: 100%; padding: 14px; border-radius: 8px; border: none; background: var(--gold); color: #000; font-family: ProximaNova, sans-serif; font-size: 15px; font-weight: 800; cursor: pointer; transition: background .15s; letter-spacing: .04em; }
+.btn-primary:hover { background: #e8c010; }
+.error-msg { font-size: 13px; color: var(--pink); font-weight: 700; margin-top: 10px; text-align: center; min-height: 18px; }
+
+/* ROADMAP HEADER */
+.roadmap-header { background: #fff; border-bottom: 1px solid #e8e8e8; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+.header-name { font-size: 16px; font-weight: 800; color: var(--black); }
+.header-meta { font-size: 12px; color: var(--gold); font-weight: 700; letter-spacing: .06em; margin-top: 1px; }
+.autosave-pill { font-size: 11px; font-weight: 700; color: #aaa; min-height: 14px; margin-top: 2px; transition: color .3s; }
+.autosave-pill.saving { color: var(--gold); }
+.autosave-pill.saved { color: #22c55e; }
+.autosave-pill.err { color: var(--pink); }
+.btn-logout { background: #f5f5f5; border: 1px solid #e0e0e0; color: #666; font-family: ProximaNova, sans-serif; font-size: 12px; font-weight: 700; padding: 7px 14px; border-radius: 6px; cursor: pointer; transition: all .15s; }
+.btn-logout:hover { border-color: var(--pink); color: var(--pink); }
+.card { background: #fff; border: 1px solid #e8e8e8; border-radius: var(--radius); padding: 20px; margin-bottom: 16px; box-shadow: var(--shadow); }
+.card-title { font-size: 13px; font-weight: 800; color: var(--gold); letter-spacing: .04em; margin-bottom: 14px; }
+.section-label { font-size: 11px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: #888; margin-bottom: 10px; }
+.save-row { display: flex; align-items: center; gap: 14px; margin-top: 20px; }
+.save-btn { background: var(--gold); color: #000; border: none; border-radius: 8px; padding: 12px 24px; font-family: ProximaNova, sans-serif; font-size: 14px; font-weight: 800; cursor: pointer; transition: background .15s; }
+.save-btn:hover { background: #e8c010; }
+.save-btn:disabled { opacity: .4; cursor: default; }
+.field-label { font-size: 10px; font-weight: 800; color: #888; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 5px; margin-top: 14px; }
+.text-input { width: 100%; background: #fafafa; border: 1.5px solid #e0e0e0; border-radius: 6px; padding: 9px 12px; color: var(--black); font-family: ProximaNova, sans-serif; font-size: 14px; outline: none; transition: border-color .15s; }
+.text-input:focus { border-color: var(--gold); }
+.text-input:disabled { opacity: .45; }
+.text-input::placeholder { color: #bbb; }
+.pm-topbar { background: var(--gold); padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; }
+.pm-topbar h2 { font-size: 18px; font-weight: 900; color: #000; }
+.pm-topbar button { background: rgba(0,0,0,.1); border: none; color: #000; font-family: ProximaNova, sans-serif; font-size: 12px; font-weight: 800; padding: 7px 14px; border-radius: 6px; cursor: pointer; }
+.pm-controls { padding: 14px 20px; display: flex; gap: 8px; border-bottom: 1px solid #e8e8e8; background: #fff; }
+.pm-search { flex: 1; background: #fafafa; border: 1.5px solid #e0e0e0; border-radius: 8px; padding: 10px 14px; color: var(--black); font-family: ProximaNova, sans-serif; font-size: 14px; outline: none; }
+.pm-search:focus { border-color: var(--gold); }
+.pm-search::placeholder { color: #aaa; }
+.pm-grade-sel { background: #fafafa; border: 1.5px solid #e0e0e0; border-radius: 8px; padding: 10px 12px; color: var(--black); font-family: ProximaNova, sans-serif; font-size: 13px; outline: none; cursor: pointer; }
+.pm-prompt-section { padding: 16px 20px 0; background: #f7f7f5; }
+.pm-prompt-card { background: #fff; border: 1px solid #e8e8e8; border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); }
+.pm-prompt-card h3 { font-size: 13px; font-weight: 800; color: var(--gold); margin-bottom: 10px; }
+.prompt-textarea { width: 100%; background: #fafafa; border: 1.5px solid #e0e0e0; border-radius: 8px; padding: 12px 14px; color: var(--black); font-family: ProximaNova, sans-serif; font-size: 14px; outline: none; resize: vertical; min-height: 80px; transition: border-color .15s; margin-bottom: 10px; }
+.prompt-textarea:focus { border-color: var(--gold); }
+.fellow-list { padding: 14px 20px; flex: 1; background: #f7f7f5; }
+.fellow-item { background: #fff; border: 1px solid #e8e8e8; border-radius: 10px; padding: 13px 16px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: all .15s; box-shadow: var(--shadow); }
+.fellow-item:hover { border-color: var(--gold); background: var(--gold-pale); }
+.fellow-item-name { font-size: 15px; font-weight: 700; color: var(--black); }
+.fellow-item-meta { font-size: 12px; color: #888; margin-top: 2px; }
+.fellow-arrow { color: #ccc; font-size: 12px; }
+.pts-badge { display: inline-block; background: var(--gold-pale); color: var(--gold); border: 1px solid #e8d500; font-size: 11px; font-weight: 800; padding: 1px 7px; border-radius: 20px; margin-left: 6px; }
+.back-btn { display: flex; align-items: center; gap: 8px; background: none; border: none; color: var(--gold); font-family: ProximaNova, sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; padding: 0; }
+.hidden { display: none !important; }
+.loading-screen { position: fixed; inset: 0; background: #fff; z-index: 999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; }
+.loading-screen.hidden { display: none !important; }
+.loading-wordmark { font-size: 12px; font-weight: 900; letter-spacing: .18em; color: var(--gold); text-transform: uppercase; }
+.loading-title { font-size: 26px; font-weight: 900; color: var(--black); }
+.loading-spinner { width: 40px; height: 40px; border: 3px solid #f0f0f0; border-top-color: var(--gold); border-radius: 50%; animation: spin .8s linear infinite; }
+.loading-msg { font-size: 13px; color: #aaa; font-weight: 700; }
+.back-btn { display: flex; align-items: center; gap: 8px; background: none; border: none; color: var(--gold); font-family: ProximaNova, sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; padding: 0; }
+
+@media (min-width: 700px) {
+  .screen { max-width: 680px; margin: 0 auto; }
+  body { background: #eeeee9; }
+  .tops-grid { grid-template-columns: repeat(3, 1fr); }
+}
+.loading-screen { position: fixed; inset: 0; background: #fff; z-index: 999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; }
+.loading-screen.hidden { display: none !important; }
+/* SELF TOOLKIT REFLECTION */
+.tk-intro { font-size: 13px; color: #666; line-height: 1.45; margin-bottom: 4px; }
+.tk-step { display: flex; align-items: center; gap: 8px; margin: 18px 0 8px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── FUTURE YOU TAB ─────────────────────────────────────────── */
+.fy-hero { background: var(--black); color: #fff; border-radius: var(--radius); padding: 20px; margin-bottom: 16px; position: relative; overflow: hidden; }
+.fy-hero::after { content: ''; position: absolute; right: -60px; top: -60px; width: 200px; height: 200px; border-radius: 50%; background: radial-gradient(circle, var(--gold-light) 0%, rgba(240,201,23,0) 70%); opacity: .35; }
+.fy-hero-kicker { font-size: 10px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; color: var(--gold-light); margin-bottom: 4px; }
+.fy-hero-title { font-size: 22px; font-weight: 900; line-height: 1.15; margin-bottom: 6px; }
+.fy-hero-sub { font-size: 13px; color: rgba(255,255,255,.7); line-height: 1.45; max-width: 520px; }
+.fy-stops { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 16px; position: relative; z-index: 1; }
+.fy-stop { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.14); border-radius: 8px; padding: 8px; font-size: 11px; font-weight: 800; color: rgba(255,255,255,.75); text-align: left; cursor: pointer; font-family: ProximaNova, sans-serif; }
+.fy-stop b { display: block; font-size: 16px; margin-bottom: 2px; }
+.fy-stop.done { background: var(--gold-light); color: #000; border-color: var(--gold-light); }
+.fy-sec { scroll-margin-top: 12px; }
+.fy-sec-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+.fy-sec-num { font-size: 11px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: #888; }
+.fy-sec-meta { font-size: 11px; font-weight: 800; color: var(--gold); }
+.fy-q { font-size: 15px; font-weight: 800; color: var(--black); margin: 18px 0 4px; line-height: 1.3; }
+.fy-q:first-child { margin-top: 0; }
+.fy-hint { font-size: 12px; color: #888; margin-bottom: 8px; line-height: 1.4; }
+.fy-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.fy-chip { padding: 8px 12px; border-radius: 999px; border: 1.5px solid #e0e0e0; background: #fafafa; font-family: ProximaNova, sans-serif; font-size: 13px; font-weight: 700; color: var(--black); cursor: pointer; transition: all .12s; }
+.fy-chip:hover:not(:disabled) { border-color: var(--gold); }
+.fy-chip.on { border-color: var(--black); background: var(--black); color: #fff; }
+.fy-chip:disabled { cursor: default; opacity: .7; }
+.fy-chip.sm { padding: 5px 10px; font-size: 12px; }
+.fy-ta { width: 100%; background: #fafafa; border: 1.5px solid #e0e0e0; border-radius: 8px; padding: 10px 12px; font-family: ProximaNova, sans-serif; font-size: 14px; color: var(--black); outline: none; resize: vertical; min-height: 64px; line-height: 1.4; }
+.fy-ta:focus { border-color: var(--gold); }
+.fy-ta:disabled { opacity: .7; }
+
+/* mood meter */
+.fy-mood { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; max-width: 420px; }
+.fy-mq { border: 2px solid transparent; border-radius: 10px; padding: 12px; text-align: left; cursor: pointer; font-family: ProximaNova, sans-serif; color: #1a1a1a; min-height: 66px; transition: transform .1s; }
+.fy-mq:hover:not(:disabled) { transform: translateY(-1px); }
+.fy-mq b { display: block; font-size: 13px; font-weight: 900; }
+.fy-mq span { font-size: 11px; font-weight: 700; opacity: .75; }
+.fy-mq.on { border-color: var(--black); box-shadow: 0 0 0 2px #fff inset; }
+.fy-mq:disabled { cursor: default; }
+.fy-mq.red { background: #f8b4b4; } .fy-mq.yellow { background: #fbe38e; }
+.fy-mq.blue { background: #a9cdf2; } .fy-mq.green { background: #a8dfb5; }
+.fy-mood-axis { display: flex; justify-content: space-between; max-width: 420px; font-size: 10px; font-weight: 800; color: #aaa; letter-spacing: .08em; text-transform: uppercase; margin-top: 4px; }
+.fy-stamp { display: inline-flex; align-items: center; gap: 6px; background: var(--gold-pale); color: #7a6500; border: 1px dashed var(--gold); border-radius: 999px; padding: 5px 12px; font-size: 12px; font-weight: 800; margin-top: 14px; }
+
+/* deck */
+.fy-sparks { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
+.fy-spark { flex-shrink: 0; max-width: 220px; text-align: left; background: var(--gold-pale); border: 1px solid #efdf86; border-radius: 10px; padding: 10px 12px; font-family: ProximaNova, sans-serif; font-size: 12px; font-weight: 700; color: #5c4c00; cursor: pointer; line-height: 1.35; }
+.fy-spark:hover { border-color: var(--gold); }
+.fy-deck { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; margin-top: 14px; }
+.fy-card { background: #fff; border: 1.5px solid #e8e8e8; border-radius: 12px; padding: 14px; position: relative; display: flex; flex-direction: column; gap: 4px; min-height: 120px; }
+.fy-card.editing { grid-column: 1 / -1; border-color: var(--gold); box-shadow: 0 0 0 3px var(--gold-pale); }
+.fy-card-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.fy-card-type { font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: #888; display: flex; align-items: center; gap: 6px; }
+.fy-card-icon { font-size: 18px; }
+.fy-card-org { font-size: 16px; font-weight: 900; line-height: 1.2; }
+.fy-card-role { font-size: 12px; font-weight: 700; color: var(--gold); }
+.fy-card-flex { font-size: 13px; color: #444; line-height: 1.4; margin-top: 4px; }
+.fy-card-flex.empty { color: #bbb; font-style: italic; }
+.fy-card-meta { display: flex; flex-wrap: wrap; gap: 4px; margin-top: auto; padding-top: 8px; }
+.fy-tag { font-size: 10px; font-weight: 800; background: #f3f3f3; color: #555; padding: 3px 7px; border-radius: 4px; }
+.fy-card-btn { background: none; border: none; font-family: ProximaNova, sans-serif; font-size: 12px; font-weight: 800; color: #888; cursor: pointer; padding: 2px 4px; }
+.fy-card-btn:hover { color: var(--black); }
+.fy-card-btn.danger { color: var(--pink); }
+.fy-add { border: 2px dashed #ddd; background: #fafafa; border-radius: 12px; min-height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-family: ProximaNova, sans-serif; font-size: 13px; font-weight: 800; color: #888; cursor: pointer; }
+.fy-add:hover { border-color: var(--gold); color: var(--black); }
+.fy-add b { font-size: 26px; line-height: 1; }
+.fy-edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 6px; }
+.fy-edit-grid .full { grid-column: 1 / -1; }
+.fy-range { width: 100%; accent-color: var(--black); }
+.fy-range-val { font-size: 13px; font-weight: 800; }
+.fy-done-row { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; gap: 8px; }
+.fy-btn { background: var(--gold); color: #000; border: none; border-radius: 8px; padding: 10px 18px; font-family: ProximaNova, sans-serif; font-size: 13px; font-weight: 800; cursor: pointer; }
+.fy-btn:hover { background: #e8c010; }
+.fy-btn.dark { background: var(--black); color: #fff; }
+.fy-btn.ghost { background: #f1f1f1; color: #333; }
+
+/* level meter */
+.fy-level { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 8px; }
+.fy-lv { border: 1.5px solid #e0e0e0; background: #fafafa; border-radius: 10px; padding: 10px 8px; text-align: center; font-family: ProximaNova, sans-serif; cursor: pointer; color: var(--black); }
+.fy-lv b { display: block; font-size: 20px; font-weight: 900; }
+.fy-lv span { font-size: 11px; font-weight: 700; color: #777; }
+.fy-lv.on { border-color: var(--black); background: var(--black); color: #fff; }
+.fy-lv.on span { color: rgba(255,255,255,.7); }
+.fy-lv:disabled { cursor: default; }
+.fy-reveal { margin-top: 12px; background: #fafafa; border-radius: 10px; padding: 14px; display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: center; }
+.fy-reveal-num { font-size: 40px; font-weight: 900; line-height: 1; color: var(--black); }
+.fy-reveal-num small { display: block; font-size: 10px; font-weight: 800; color: #888; letter-spacing: .1em; text-transform: uppercase; }
+.fy-reveal-msg { font-size: 13px; line-height: 1.45; color: #444; }
+.fy-meters { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+.fy-meter { font-size: 11px; font-weight: 800; color: #666; }
+.fy-meter-bar { height: 6px; background: #ececec; border-radius: 3px; margin-top: 4px; overflow: hidden; }
+.fy-meter-bar i { display: block; height: 100%; background: var(--gold); border-radius: 3px; }
+
+/* moves */
+.fy-move { background: #fff; border: 1.5px solid #e8e8e8; border-radius: 12px; padding: 14px; margin-top: 10px; }
+.fy-move-title { font-size: 16px; font-weight: 900; }
+.fy-pipe { display: flex; gap: 4px; margin-top: 10px; flex-wrap: wrap; }
+.fy-pipe button { flex: 1 1 0; min-width: 88px; padding: 8px 6px; border-radius: 8px; border: 1.5px solid #e0e0e0; background: #fafafa; font-family: ProximaNova, sans-serif; font-size: 11px; font-weight: 800; color: #666; cursor: pointer; }
+.fy-pipe button.on { background: var(--black); border-color: var(--black); color: #fff; }
+.fy-pipe button.on.win { background: #22a04b; border-color: #22a04b; }
+.fy-pipe button:disabled { cursor: default; }
+.fy-due { font-size: 12px; font-weight: 800; color: #888; }
+.fy-due.late { color: var(--pink); }
+
+/* sealed note */
+.fy-envelope { background: repeating-linear-gradient(135deg, #fff9dc 0 14px, #fef3b8 14px 28px); border: 1.5px solid #efdf86; border-radius: 12px; padding: 22px; text-align: center; }
+.fy-envelope b { display: block; font-size: 30px; margin-bottom: 4px; }
+.fy-envelope div { font-size: 14px; font-weight: 800; }
+.fy-envelope span { font-size: 12px; color: #7a6500; }
+
+@media (max-width: 560px) {
+  .fy-stops { grid-template-columns: repeat(2, 1fr); }
+  .fy-edit-grid { grid-template-columns: 1fr; }
+  .fy-meters { grid-template-columns: 1fr; }
+}
+
+/* ── TEAM INSIGHTS ──────────────────────────────────────────── */
+.pm-viewtabs { display: flex; gap: 6px; padding: 14px 20px 0; background: #fff; }
+.pm-viewtab { padding: 9px 16px; border-radius: 8px 8px 0 0; border: 1px solid #e8e8e8; border-bottom: none; background: #f5f5f5; font-family: ProximaNova, sans-serif; font-size: 12px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: #888; cursor: pointer; }
+.pm-viewtab.active { background: #f7f7f5; color: var(--black); }
+.ins-wrap { padding: 16px 20px 40px; background: #f7f7f5; flex: 1; }
+.ins-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
+.ins-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 12px; }
+.ins-tile { background: #fff; border: 1px solid #e8e8e8; border-radius: 10px; padding: 14px; }
+.ins-tile-num { font-size: 28px; font-weight: 900; line-height: 1; }
+.ins-tile-lbl { font-size: 11px; font-weight: 800; color: #888; text-transform: uppercase; letter-spacing: .06em; margin-top: 6px; }
+.ins-tile-sub { font-size: 12px; color: #999; margin-top: 2px; }
+.ins-card { background: #fff; border: 1px solid #e8e8e8; border-radius: 12px; padding: 16px; }
+.ins-card h4 { font-size: 13px; font-weight: 900; margin-bottom: 2px; }
+.ins-card p.ins-sub { font-size: 12px; color: #888; margin-bottom: 12px; }
+.ins-bar { display: grid; grid-template-columns: 130px 1fr 34px; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 12px; font-weight: 700; color: #444; position: relative; }
+.ins-bar-track { height: 14px; background: #f1f1f1; border-radius: 0 4px 4px 0; }
+.ins-bar-fill { height: 100%; background: var(--gold); border-radius: 0 4px 4px 0; min-width: 2px; }
+.ins-bar-n { font-weight: 800; color: var(--black); text-align: right; }
+.ins-bar[data-tip]:hover::after { content: attr(data-tip); position: absolute; left: 138px; top: -26px; background: var(--black); color: #fff; font-size: 11px; padding: 4px 8px; border-radius: 4px; white-space: nowrap; z-index: 5; pointer-events: none; }
+.ins-swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+.ins-quotes { display: flex; flex-direction: column; gap: 8px; max-height: 420px; overflow-y: auto; }
+.ins-quote { border-left: 3px solid var(--gold); padding: 6px 10px; font-size: 13px; line-height: 1.45; background: #fafafa; border-radius: 0 6px 6px 0; }
+.ins-quote cite { display: block; font-style: normal; font-size: 11px; font-weight: 800; color: #888; margin-top: 4px; }
+.ins-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.ins-table th { text-align: left; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: #888; padding: 6px; border-bottom: 1px solid #e8e8e8; }
+.ins-table td { padding: 7px 6px; border-bottom: 1px solid #f2f2f2; }
+.ins-table tr.click { cursor: pointer; } .ins-table tr.click:hover td { background: var(--gold-pale); }
+.ins-dl { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.ins-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+.ins-head h3 { font-size: 18px; font-weight: 900; }
+.fy-badge { display: inline-block; background: #f1f1f1; color: #555; font-size: 11px; font-weight: 800; padding: 1px 7px; border-radius: 20px; margin-left: 6px; }
+.fy-badge.ok { background: #e3f5e8; color: #1c7a3a; }
+#screen-pm { max-width: 1100px; }
+.fy-passport { display: flex; gap: 6px; margin-top: 14px; overflow-x: auto; position: relative; z-index: 1; }
+.fy-pass { flex: 1 0 104px; border: 1.5px dashed rgba(255,255,255,.25); border-radius: 10px; padding: 8px; display: flex; flex-direction: column; gap: 1px; }
+.fy-pass span { font-size: 18px; line-height: 1.2; color: rgba(255,255,255,.5); }
+.fy-pass b { font-size: 11px; font-weight: 800; color: #fff; }
+.fy-pass i { font-style: normal; font-size: 10px; color: rgba(255,255,255,.55); font-weight: 700; }
+.fy-pass.got { border-style: solid; border-color: var(--gold-light); background: rgba(240,201,23,.12); }
+.fy-pass.got i { color: var(--gold-light); }
+.fy-pass.open { border-style: solid; border-color: #fff; }
+.fy-pass.open span { color: var(--gold-light); }
+.fy-past { font-size: 13px; color: #444; background: #fafafa; border-radius: 8px; padding: 8px 10px; margin-top: 6px; line-height: 1.4; }
+.fy-past div { color: #666; margin-top: 2px; }
+.fy-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin: 0 4px 0 2px; vertical-align: 0; }
+.fy-dot.yellow { background: #f2c94c; } .fy-dot.red { background: #e57373; } .fy-dot.green { background: #5fbf7a; } .fy-dot.blue { background: #5b9be0; }
+.fy-then { background: var(--gold-pale); border: 1px solid #efdf86; border-radius: 10px; padding: 12px 14px; font-size: 13px; line-height: 1.45; margin-top: 16px; }
+.fy-resume { margin-top: 12px; background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 16px; overflow-x: auto; }
+.ev-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px; border: 1.5px solid #eee; border-radius: 10px; margin-top: 8px; }
+.ev-row.on { border-color: var(--gold); background: var(--gold-pale); }
+.ev-row b { display: block; font-size: 14px; }
+.ev-row span { font-size: 12px; color: #888; }
+.pm-active { padding: 12px 20px; background: #fff; border-bottom: 1px solid #eee; font-size: 13px; color: #444; }
+@media (max-width: 560px) { .pm-controls { flex-wrap: wrap; } .pm-search { flex-basis: 100%; } .ins-bar { grid-template-columns: 110px 1fr 30px; } }
+.tk-empty { font-size: 13px; color: #aaa; font-style: italic; padding: 6px 0; }
+
+/* ── FUTURE YOU v2 ───────────────────────────────────────────── */
+.fy-ico { flex-shrink: 0; display: block; }
+.fy-hero-title { font-size: 24px; }
+.fy-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 18px; position: relative; z-index: 1; }
+.fy-step { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,.06); border: 1.5px solid rgba(255,255,255,.16); border-radius: 12px; padding: 12px; }
+.fy-step-dot { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid rgba(255,255,255,.5); color: #fff; flex-shrink: 0; }
+.fy-step-txt { font-size: 13px; font-weight: 800; color: #fff; line-height: 1.2; }
+.fy-step-txt span { display: block; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: rgba(255,255,255,.55); margin-bottom: 2px; }
+.fy-step.done { background: rgba(240,201,23,.14); border-color: var(--gold-light); }
+.fy-step.done .fy-step-dot { background: var(--gold-light); border-color: var(--gold-light); color: #000; }
+.fy-step.done .fy-step-txt span { color: var(--gold-light); }
+.fy-progress { height: 6px; background: rgba(255,255,255,.12); border-radius: 3px; margin-top: 14px; overflow: hidden; position: relative; z-index: 1; }
+.fy-progress i { display: block; height: 100%; background: var(--gold-light); border-radius: 3px; transition: width .3s; }
+.fy-progress-lbl { font-size: 11px; font-weight: 800; color: rgba(255,255,255,.6); margin-top: 6px; letter-spacing: .06em; position: relative; z-index: 1; }
+
+.fy-sec-head { display: flex; align-items: center; gap: 12px; margin: 26px 0 12px; }
+.fy-sec-badge { width: 42px; height: 42px; border-radius: 12px; background: var(--black); color: var(--gold-light); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.fy-sec-titles { flex: 1; }
+.fy-sec-kicker { font-size: 10px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: #888; }
+.fy-sec-title { font-size: 20px; font-weight: 900; color: var(--black); line-height: 1.15; }
+.fy-sec-meta { font-size: 12px; font-weight: 800; color: #7a6500; background: var(--gold-pale); border-radius: 999px; padding: 4px 10px; white-space: nowrap; }
+.fy-q { font-size: 15px; font-weight: 800; margin: 22px 0 8px; }
+.fy-q.sm { font-size: 13px; margin: 14px 0 6px; }
+.fy-pick { font-size: 11px; font-weight: 800; color: #999; letter-spacing: .04em; margin-left: 4px; }
+.fy-hint { margin-top: -4px; }
+
+/* mood meter grid with axes */
+.fy-mood-wrap { display: flex; gap: 8px; max-width: 460px; }
+.fy-mood-y { display: flex; flex-direction: column; justify-content: space-between; writing-mode: vertical-rl; transform: rotate(180deg); font-size: 10px; font-weight: 800; color: #aaa; letter-spacing: .08em; text-transform: uppercase; padding: 6px 0 22px; }
+.fy-mood-wrap > div:last-child { flex: 1; }
+.fy-mood { max-width: none; }
+.fy-mq { min-height: 74px; }
+.fy-mq span { display: block; margin-top: 3px; font-size: 12px; opacity: .85; }
+.fy-mood-x { display: flex; justify-content: space-between; font-size: 10px; font-weight: 800; color: #aaa; letter-spacing: .08em; text-transform: uppercase; margin-top: 5px; }
+.fy-level.five { grid-template-columns: repeat(5, 1fr); }
+
+/* sparks */
+.fy-spark { display: flex; flex-direction: column; gap: 2px; min-width: 150px; }
+.fy-spark span { font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: #9a8300; }
+
+/* cards */
+.fy-card-top { align-items: flex-start; }
+.fy-card-org { font-size: 17px; }
+.fy-card-type { letter-spacing: .06em; margin-top: 2px; }
+.fy-card-type .fy-card-role { color: var(--gold); text-transform: none; letter-spacing: 0; font-size: 12px; }
+.fy-card-verbs { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.fy-card-verbs span { font-size: 11px; font-weight: 800; background: var(--black); color: #fff; padding: 2px 8px; border-radius: 999px; }
+.fy-ed-q { font-size: 14px; font-weight: 800; color: var(--black); margin: 18px 0 8px; }
+.fy-ed-q.first { margin-top: 4px; }
+.fy-range-row { display: flex; align-items: center; gap: 12px; max-width: 420px; }
+.fy-range-val { min-width: 56px; text-align: right; }
+
+/* rubric rating */
+.fy-rating { display: grid; grid-template-columns: 110px 1fr; gap: 16px; margin-top: 18px; background: var(--black); color: #fff; border-radius: 12px; padding: 16px; }
+.fy-rating-num { font-size: 46px; font-weight: 900; line-height: 1; color: var(--gold-light); }
+.fy-rating-num small { display: block; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: rgba(255,255,255,.6); margin-bottom: 6px; }
+.fy-rating-num em { display: block; font-style: normal; font-size: 14px; color: #fff; margin-top: 4px; }
+.fy-rating-src { font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: rgba(255,255,255,.55); }
+.fy-rating-msg { font-size: 14px; font-weight: 700; margin-top: 6px; line-height: 1.4; }
+.fy-rating-msg span { color: rgba(255,255,255,.6); font-weight: 400; }
+.fy-rating-stats { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.fy-rating-stats span { font-size: 12px; background: rgba(255,255,255,.1); padding: 4px 8px; border-radius: 6px; }
+.fy-rating-stats b { color: var(--gold-light); }
+.fy-rating-next { font-size: 12px; color: rgba(255,255,255,.75); margin-top: 10px; line-height: 1.4; }
+.fy-rubric { margin-top: 8px; font-size: 12px; color: #555; }
+.fy-rubric summary { cursor: pointer; font-weight: 800; color: #888; padding: 4px 0; }
+.fy-rubric div { padding: 4px 0; border-bottom: 1px solid #f0f0f0; }
+
+/* moves */
+.fy-move-head { display: flex; gap: 10px; align-items: flex-start; }
+.fy-move-ico { width: 34px; height: 34px; border-radius: 10px; background: var(--gold-pale); color: #7a6500; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.fy-move-kind { font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #888; }
+.fy-link { display: inline-block; margin-top: 6px; font-size: 12px; color: var(--gold); font-weight: 800; }
+.fy-kinds { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 14px; }
+.fy-kind { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; text-align: left; padding: 14px; border: 2px dashed #ddd; background: #fafafa; border-radius: 12px; font-family: ProximaNova, sans-serif; font-size: 13px; font-weight: 800; color: var(--black); cursor: pointer; }
+.fy-kind:hover { border-color: var(--gold); border-style: solid; background: var(--gold-pale); }
+.fy-kind .fy-ico { color: var(--gold); }
+
+/* note */
+.fy-envelope { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #5c4c00; }
+.fy-envelope.open { align-items: stretch; text-align: left; }
+.fy-env-h { font-size: 13px; font-weight: 800; margin-bottom: 4px; }
+.fy-env-q { font-size: 12px; font-weight: 800; color: #7a6500; margin-top: 10px; }
+.fy-env-a { font-size: 15px; color: #1a1a1a; line-height: 1.45; }
+
+/* passport (multi-event sites) */
+.fy-pass b { font-size: 12px; }
+
+@media (max-width: 560px) {
+  .fy-steps { grid-template-columns: repeat(2, 1fr); }
+  .fy-kinds { grid-template-columns: 1fr; }
+  .fy-rating { grid-template-columns: 1fr; }
+  .fy-level.five { grid-template-columns: repeat(3, 1fr); }
+}
+
+.fy-mood2 { display: grid; grid-template-columns: 52px 1fr 1fr; gap: 6px; max-width: 480px; align-items: stretch; }
+.fy-my { font-size: 10px; font-weight: 800; color: #999; letter-spacing: .06em; text-transform: uppercase; display: flex; align-items: center; line-height: 1.2; }
+.fy-mx { font-size: 10px; font-weight: 800; color: #999; letter-spacing: .06em; text-transform: uppercase; text-align: center; }
+.rd-wrap { max-width: 920px; margin: 0 auto; padding: 20px 16px 60px; }
+.rd-rubric { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.rd-lv { display: flex; gap: 10px; align-items: flex-start; background: #fafafa; border: 1.5px solid #eee; border-radius: 10px; padding: 12px; }
+.rd-lv > b { width: 34px; height: 34px; border-radius: 50%; background: var(--black); color: var(--gold-light); display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 900; flex-shrink: 0; }
+.rd-lv strong { display: block; font-size: 14px; font-weight: 900; }
+.rd-lv span { display: block; font-size: 12px; color: #555; line-height: 1.35; margin-top: 2px; }
+.rd-cands { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.rd-cand { text-align: left; border: 1.5px solid #e0e0e0; background: #fafafa; border-radius: 10px; padding: 12px; font-family: ProximaNova, sans-serif; cursor: pointer; color: var(--black); }
+.rd-cand:hover { border-color: var(--gold); }
+.rd-cand-top { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+.rd-cand-top b { font-size: 14px; font-weight: 800; }
+.rd-cand-top span { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 800; white-space: nowrap; }
+.rd-cand-why { font-size: 12px; color: #444; margin-top: 6px; line-height: 1.4; }
+.rd-cand.yes { border-color: #22a04b; background: #eaf7ee; } .rd-cand.yes .rd-cand-top span { color: #1c7a3a; }
+.rd-cand.no { border-color: #e2a3b8; background: #fdf0f4; } .rd-cand.no .rd-cand-top span { color: var(--pink); }
+.rd-meter { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-top: 16px; background: var(--black); color: #fff; border-radius: 12px; padding: 16px; }
+.rd-meter > div:not(.rd-arrow):not(.rd-meter-stats) { text-align: center; min-width: 80px; }
+.rd-meter small { display: block; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: rgba(255,255,255,.6); }
+.rd-meter b { display: block; font-size: 40px; font-weight: 900; line-height: 1.1; color: #fff; }
+.rd-meter em { font-style: normal; font-size: 12px; color: rgba(255,255,255,.8); }
+.rd-meter .up b { color: var(--gold-light); }
+.rd-arrow { font-size: 26px; color: rgba(255,255,255,.5); }
+.rd-meter-stats { display: flex; flex-wrap: wrap; gap: 6px; margin-left: auto; }
+.rd-meter-stats span { font-size: 12px; background: rgba(255,255,255,.1); padding: 4px 8px; border-radius: 6px; }
+.rd-meter-stats b { display: inline; font-size: 12px; color: var(--gold-light); }
+.fy-btn:disabled { opacity: .4; cursor: default; }
+@media (max-width: 700px) { .rd-rubric { grid-template-columns: 1fr 1fr; } .rd-cands { grid-template-columns: 1fr; } .rd-meter-stats { margin-left: 0; } }
+
+/* ── game layer ── */
+.rd-stack { position: absolute; right: 40px; top: 18px; width: 80px; height: 100px; z-index: 1; }
+.rd-stack i { position: absolute; inset: 0; border-radius: 12px; background: #fff; border: 2px solid var(--gold-light); box-shadow: 0 6px 16px rgba(0,0,0,.35); }
+.rd-stack i:nth-child(1) { transform: rotate(-14deg) translateX(-18px); background: #2a2a2a; }
+.rd-stack i:nth-child(2) { transform: rotate(-5deg) translateX(-6px); background: #333; }
+.rd-stack i:nth-child(3) { transform: rotate(6deg); background: var(--gold-light); display: flex; align-items: center; justify-content: center; }
+.rd-stack b { font-size: 38px; font-weight: 900; color: #000; }
+@media (max-width: 700px) { .rd-stack { display: none; } }
+.rd-hero .fy-hero-title { font-size: 34px; }
+.rd-hero.sm { padding: 14px 20px; } .rd-hero.sm .fy-hero-title { font-size: 22px; }
+.rd-start { display: flex; gap: 8px; margin-top: 18px; position: relative; z-index: 1; flex-wrap: wrap; }
+.rd-start .text-input { flex: 1; min-width: 200px; background: #fff; font-size: 16px; padding: 12px 14px; }
+.rd-go { font-size: 15px; padding: 12px 22px; }
+.rd-howto { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; position: relative; z-index: 1; }
+.rd-howto span { font-size: 12px; color: rgba(255,255,255,.8); background: rgba(255,255,255,.08); border-radius: 999px; padding: 5px 10px; }
+.rd-howto b { color: var(--gold-light); }
+.rd-sub { margin: -4px 0 12px; }
+.rd-score { position: sticky; top: 0; z-index: 60; display: flex; align-items: center; gap: 14px; background: var(--gold-light); color: #000; border-radius: 0 0 14px 14px; padding: 10px 16px; margin: -20px -16px 14px; box-shadow: 0 4px 14px rgba(0,0,0,.12); }
+.rd-score-who { display: flex; align-items: center; gap: 6px; font-weight: 900; font-size: 14px; flex: 1; min-width: 0; }
+.rd-score-who span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rd-score-pts { font-size: 13px; font-weight: 800; } .rd-score-pts b { font-size: 24px; font-weight: 900; }
+.rd-score-rank { font-size: 11px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; background: #000; color: var(--gold-light); padding: 4px 10px; border-radius: 999px; }
+.rd-timer { display: flex; align-items: center; gap: 4px; font-weight: 900; font-size: 16px; background: #fff; padding: 4px 10px; border-radius: 999px; }
+.rd-timer.low { background: var(--pink); color: #fff; animation: rdPulse .8s infinite; }
+.rd-timer-row { display: flex; justify-content: flex-end; margin-bottom: 10px; }
+.rd-sm { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; font-size: 12px; }
+.rd-card { transition: transform .15s; }
+.rd-card:hover { transform: translateY(-2px) rotate(-.3deg); box-shadow: 0 6px 16px rgba(0,0,0,.08); }
+.rd-card.award { background: var(--gold-pale); border-color: #efdf86; }
+.rd-card-type { font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: #888; }
+.fy-tag.multi { background: var(--black); color: var(--gold-light); }
+.rd-card.deal { animation: rdDeal .45s cubic-bezier(.2,.8,.3,1.2) both; animation-delay: calc(var(--i) * 70ms); }
+.rd-step { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 900; margin: 22px 0 10px; }
+.rd-step span { width: 26px; height: 26px; border-radius: 50%; background: var(--gold-light); display: flex; align-items: center; justify-content: center; font-size: 13px; }
+.rd-counts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.rd-count { background: #fafafa; border: 1.5px solid #e8e8e8; border-radius: 12px; padding: 10px; text-align: center; }
+.rd-count-l { font-size: 12px; font-weight: 800; color: #555; min-height: 30px; }
+.rd-count-ctl { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 4px; }
+.rd-count-ctl b { font-size: 28px; font-weight: 900; min-width: 34px; }
+.rd-count-ctl button { width: 34px; height: 34px; border-radius: 50%; border: none; background: var(--black); color: #fff; font-size: 20px; font-weight: 900; cursor: pointer; line-height: 1; }
+.rd-count-ctl button:disabled { opacity: .25; cursor: default; }
+.rd-count.ok { border-color: #22a04b; background: #eaf7ee; } .rd-count.off { border-color: #e2a3b8; background: #fdf0f4; }
+.rd-count-ans { display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 12px; font-weight: 800; margin-top: 4px; }
+.rd-count.ok .rd-count-ans { color: #1c7a3a; } .rd-count.off .rd-count-ans { color: var(--pink); }
+.fy-lv.answer { box-shadow: 0 0 0 3px var(--gold-light); }
+.rd-lock { display: inline-flex; align-items: center; gap: 6px; font-size: 15px; padding: 12px 20px; }
+.rd-reveal { margin-top: 16px; } .rd-reveal.flip { animation: rdFlip .6s ease both; }
+.rd-cand.pop { animation: rdPop .35s ease; } .rd-cand.shake { animation: rdShake .4s ease; }
+.rd-cand:disabled { cursor: default; }
+.rd-lvl { position: relative; display: grid; grid-template-columns: 110px 1fr; gap: 16px; align-items: center; margin-top: 16px; background: var(--black); color: #fff; border-radius: 12px; padding: 16px; overflow: hidden; }
+.rd-lvl.bump .rd-lvl-num b { animation: rdBump .6s ease; }
+.rd-lvl-num { text-align: center; } .rd-lvl-num small { display: block; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: rgba(255,255,255,.6); }
+.rd-lvl-num b { display: block; font-size: 52px; font-weight: 900; line-height: 1; color: var(--gold-light); } .rd-lvl-num em { font-style: normal; font-size: 13px; }
+.rd-bar { position: relative; height: 12px; background: rgba(255,255,255,.12); border-radius: 6px; margin: 4px 0 18px; }
+.rd-bar i { display: block; height: 100%; background: var(--gold-light); border-radius: 6px; transition: width .5s cubic-bezier(.2,.8,.3,1.2); }
+.rd-bar .m { position: absolute; top: 16px; transform: translateX(-50%); font-size: 10px; font-weight: 800; color: rgba(255,255,255,.55); }
+.rd-bar .m::before { content: ''; position: absolute; top: -18px; left: 50%; width: 2px; height: 14px; background: rgba(255,255,255,.4); }
+.rd-lvl-stats { display: flex; flex-wrap: wrap; gap: 6px; } .rd-lvl-stats span { font-size: 12px; background: rgba(255,255,255,.1); padding: 4px 8px; border-radius: 6px; } .rd-lvl-stats b { color: var(--gold-light); }
+.rd-lvl-msg { font-size: 14px; font-weight: 700; margin-top: 10px; } .rd-lvl-msg.dim { color: rgba(255,255,255,.6); font-weight: 400; }
+.rd-levelup { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 44px; font-weight: 900; letter-spacing: .08em; color: #000; background: var(--gold-light); animation: rdLevelUp 1.4s ease forwards; pointer-events: none; }
+.rd-badge { display: flex; align-items: center; gap: 16px; background: var(--black); color: #fff; border-radius: 14px; padding: 18px 20px; margin-bottom: 14px; border: 2px solid var(--gold-light); }
+.rd-badge.in { animation: rdFlip .7s ease both; }
+.rd-badge-star { width: 58px; height: 58px; border-radius: 50%; background: var(--gold-light); color: #000; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.rd-badge-rank { font-size: 24px; font-weight: 900; color: var(--gold-light); } .rd-badge-who { font-size: 13px; color: rgba(255,255,255,.8); margin-top: 2px; } .rd-badge-who b { color: #fff; }
+.rd-toast { position: fixed; right: 16px; top: 70px; z-index: 200; background: #000; color: var(--gold-light); font-weight: 900; font-size: 14px; padding: 10px 14px; border-radius: 10px; box-shadow: 0 8px 20px rgba(0,0,0,.25); animation: rdToast 2.2s ease forwards; animation-delay: var(--d); opacity: 0; }
+.rd-toast.neg { color: #fff; background: var(--pink); }
+.rd-conf { position: fixed; top: -12px; height: 10px; z-index: 300; pointer-events: none; animation: rdFall 1.8s ease-in forwards; border-radius: 2px; }
+@keyframes rdDeal { from { opacity: 0; transform: translateY(-30px) rotate(-6deg) scale(.9); } to { opacity: 1; transform: none; } }
+@keyframes rdFlip { from { opacity: 0; transform: perspective(600px) rotateX(-70deg); } to { opacity: 1; transform: none; } }
+@keyframes rdPop { 50% { transform: scale(1.04); } }
+@keyframes rdShake { 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
+@keyframes rdBump { 40% { transform: scale(1.35); } }
+@keyframes rdPulse { 50% { transform: scale(1.08); } }
+@keyframes rdLevelUp { 0% { opacity: 0; transform: scale(.6); } 20% { opacity: 1; transform: scale(1.05); } 70% { opacity: 1; } 100% { opacity: 0; transform: scale(1.1); } }
+@keyframes rdToast { 0% { opacity: 0; transform: translateY(-10px); } 12% { opacity: 1; transform: none; } 80% { opacity: 1; } 100% { opacity: 0; transform: translateY(-14px); } }
+@keyframes rdFall { to { transform: translate(var(--x), 105vh) rotate(var(--r)); opacity: .9; } }
+@media (prefers-reduced-motion: reduce) { .rd-card.deal, .rd-reveal.flip, .rd-cand.pop, .rd-cand.shake, .rd-badge.in, .rd-lvl.bump .rd-lvl-num b, .rd-timer.low { animation: none; } .rd-levelup { display: none; } }
+@media (max-width: 700px) { .rd-counts { grid-template-columns: 1fr 1fr; } .rd-lvl { grid-template-columns: 1fr; } .rd-score { gap: 8px; } .rd-score-rank { display: none; } }
+
+.rd-room-in { flex: 0 0 150px !important; min-width: 120px !important; text-transform: uppercase; letter-spacing: .08em; font-weight: 800; }
+.rd-fac { font-size: 12px; color: #888; margin: 10px 4px; } .rd-fac a { color: #7a6500; font-weight: 800; }
+.rd-score-place { font-size: 22px; font-weight: 900; } .rd-score-place small { font-size: 12px; font-weight: 800; }
+/* ── projector leaderboard ── */
+body.rd-board-mode { background: #111; }
+body.rd-board-mode .rd-wrap { max-width: 1400px; padding: 28px 32px; color: #fff; }
+.bd-top { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 22px; }
+.bd-title { font-size: 52px; font-weight: 900; line-height: 1; }
+.bd-room { text-align: right; background: var(--gold-light); color: #000; border-radius: 14px; padding: 10px 20px; }
+.bd-room small { display: block; font-size: 11px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+.bd-room b { font-size: 40px; font-weight: 900; letter-spacing: .08em; }
+.bd-grid { display: grid; grid-template-columns: 1fr 320px; gap: 24px; }
+.bd-list { position: relative; transition: height .4s; }
+.bd-row { position: absolute; left: 0; right: 0; height: 56px; display: grid; grid-template-columns: 56px 1fr 34% 90px; align-items: center; gap: 14px; background: #1e1e1e; border: 1.5px solid #2c2c2c; border-radius: 12px; padding: 0 16px; transition: top .7s cubic-bezier(.2,.8,.2,1), background .3s; }
+.bd-row.new { animation: bdIn .5s ease; }
+.bd-row.up { background: #2a2610; }
+.bd-row.top1 { border-color: var(--gold-light); background: #2b2608; } .bd-row.top2 { border-color: #bdbdbd; } .bd-row.top3 { border-color: #c98a4a; }
+.bd-rank { font-size: 26px; font-weight: 900; color: #777; text-align: center; }
+.bd-row.top1 .bd-rank { color: var(--gold-light); } .bd-row.top2 .bd-rank { color: #ddd; } .bd-row.top3 .bd-rank { color: #e0a060; }
+.bd-pod b { font-size: 20px; font-weight: 900; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bd-rounds { display: flex; gap: 4px; margin-top: 4px; } .bd-rounds i { width: 22px; height: 5px; border-radius: 3px; background: #333; } .bd-rounds i.on { background: var(--gold-light); } .bd-rounds i.now { background: #777; }
+.bd-bar { height: 14px; background: #2c2c2c; border-radius: 7px; overflow: hidden; } .bd-bar span { display: block; height: 100%; background: var(--gold-light); border-radius: 7px; transition: width .7s cubic-bezier(.2,.8,.2,1); }
+.bd-pts { font-size: 28px; font-weight: 900; text-align: right; } .bd-pts.bump { animation: rdBump .6s ease; color: var(--gold-light); }
+.bd-empty { color: #888; font-size: 18px; padding: 40px 0; } .bd-empty b { color: var(--gold-light); }
+.bd-side { display: flex; flex-direction: column; gap: 12px; }
+.bd-card { background: #1e1e1e; border: 1.5px solid #2c2c2c; border-radius: 14px; padding: 16px; }
+.bd-card small { display: block; font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #999; }
+.bd-card > b { display: block; font-size: 40px; font-weight: 900; color: var(--gold-light); line-height: 1.1; margin-top: 4px; }
+.bd-card > span { font-size: 13px; color: #bbb; }
+.bd-dist { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; height: 90px; margin-top: 12px; align-items: end; }
+.bd-dist div { position: relative; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; }
+.bd-dist span { width: 100%; background: #444; border-radius: 4px 4px 0 0; min-height: 2px; transition: height .5s; }
+.bd-dist div.ans span { background: var(--gold-light); }
+.bd-dist b { order: -1; font-size: 12px; color: #ddd; margin-bottom: 4px; } .bd-dist em { font-style: normal; font-size: 12px; font-weight: 800; color: #999; margin-top: 4px; }
+.bd-dist div.ans em { color: var(--gold-light); }
+.bd-wrong { font-size: 18px; font-weight: 900; margin: 6px 0 4px; }
+.bd-foot { margin-top: 26px; font-size: 14px; color: #777; } .bd-foot span { color: #ccc; font-weight: 700; }
+@keyframes bdIn { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: none; } }
+@media (max-width: 900px) { .bd-grid { grid-template-columns: 1fr; } .bd-row { grid-template-columns: 40px 1fr 70px; } .bd-bar { display: none; } .bd-title { font-size: 34px; } .bd-room b { font-size: 26px; } }
+</style></head>
+<body><div class="rd-wrap"><div id="rd-root"></div></div>
+<script>
+// ══ RATE THE DECK v2 · game version ══════════════════════════════
+// No data is saved; refresh to start over.
+const FUTURE_YOU_URL = ''; // optional: paste the link Fellows use to build their own deck
+// Leaderboard: paste the Web App URL from the Rate the Deck Apps Script here.
+// Until then, the leaderboard only works between tabs in the same browser (demo mode).
+const APPS_SCRIPT_URL = 'PASTE_YOUR_WEB_APP_URL_HERE';
+const QS = new URLSearchParams(location.search);
+const TIMER_SECONDS = 90;   // length of the optional pod timer for each deck
+
+const RUBRIC = [
+  { n: 1, label: 'Low',       need: '0–4 activities' },
+  { n: 2, label: 'Moderate',  need: '5–8 activities, with 1 deep involvement or leadership role' },
+  { n: 3, label: 'High',      need: '8–10 activities, with 2–3 done for more than one year' },
+  { n: 4, label: 'Extensive', need: 'Level 3, plus 5 or more awards or honors' },
+];
+const LEAD = ['Leader','Captain / Officer','Founder'];
+const TYPE = { sport: 'Sport', club: 'School Club', arts: 'Arts / Performance', faith: 'Faith / Church', volunteer: 'Volunteer', job: 'Job / Side Hustle', family: 'Family Responsibility', bryc: 'BRYC', program: 'Summer / Program', award: 'Award / Honor' };
+const STATS = [['acts','Activities'],['multi','More than 1 year'],['lead','Leadership roles'],['awards','Awards']];
+const SURE = [['guess','Just guessing'],['pretty','Pretty sure'],['certain','Certain']];
+
+const DECKS = {
+  A: { who: 'Fellow A', grade: '11th grade', answer: 3,
+    why: 'Nine activities, and six of them lasted more than one year. Fellow A also leads in four of them.',
+    whyNot: 'Why not a 4? Only 2 awards. Level 4 needs 5 or more.',
+    cards: [
+      { org: 'Varsity Volleyball', type: 'sport', role: 'Captain / Officer', grades: [9,10,11], hours: 12, verbs: ['Led','Competed'], flex: 'I run the defense and adjust our plan during games. I also speak up for teammates with the coach. It taught me how to stay calm under pressure.' },
+      { org: 'Student Council', type: 'club', role: 'Leader', grades: [10,11], hours: 3, verbs: ['Organized','Planned'], flex: 'As vice president, I help plan Homecoming and share student concerns with the principal.' },
+      { org: 'Student Ambassadors', type: 'club', role: 'Leader', grades: [10,11], hours: 4, verbs: ['Led','Served'], flex: 'I give school tours to families who are thinking about enrolling. I was nervous at first, and now I love it.' },
+      { org: 'Caring for my younger sister', type: 'family', role: 'Helper', grades: [9,10,11], hours: 10, verbs: ['Cared for','Supported'], flex: 'I pick her up from school, help with homework, and make dinner on weeknights while my mom works.' },
+      { org: 'Prom Committee', type: 'club', role: 'Leader', grades: [11], hours: 5, verbs: ['Planned','Managed'], flex: 'I chair the committee and keep track of the budget and decorations.' },
+      { org: 'After-School Math Tutoring', type: 'volunteer', role: 'Helper', grades: [11], hours: 3, verbs: ['Taught'], flex: 'I tutor 9th graders in Algebra 1 twice a week.' },
+      { org: 'Key Club', type: 'volunteer', role: 'Member', grades: [11], hours: 2, verbs: ['Served'], flex: 'I volunteer at food bank days and the children’s museum.' },
+      { org: 'Youth Choir', type: 'faith', role: 'Member', grades: [9,10], hours: 2, verbs: ['Performed'], flex: 'I sang at Sunday services and holiday programs.' },
+      { org: 'BRYC Fellow', type: 'bryc', role: 'Member', grades: [10,11], hours: 4, verbs: ['Practiced','Planned'], flex: 'Weekly program for SRL, ACT prep, and mentoring.' },
+      { org: 'A/B Honor Roll', type: 'award', role: 'My high school', grades: [9,10,11] },
+      { org: 'Most Improved Player', type: 'award', role: 'Varsity Volleyball', grades: [10] },
+    ] },
+  B: { who: 'Fellow B', grade: '10th grade', answer: 1,
+    why: 'Three activities, all for one year or less, and no leadership roles.',
+    whyNot: 'But read Fellow B’s BRYC card again. Something important is missing.',
+    cards: [
+      { org: 'Art Club', type: 'club', role: 'Member', grades: [10], hours: 1, verbs: [], flex: 'Went to a few meetings.' },
+      { org: 'Rec League Basketball', type: 'sport', role: 'Member', grades: [10], hours: 2, verbs: ['Competed'], flex: '' },
+      { org: 'BRYC Fellow', type: 'bryc', role: 'Member', grades: [10], hours: 3, verbs: [], flex: 'I come on Tuesdays. I can’t stay late because I pick up my cousins after school and watch them until my aunt gets home.' },
+      { org: 'Participation Certificate', type: 'award', role: 'Art Club', grades: [10] },
+    ] },
+};
+const CANDIDATES = [
+  { id: 'c1', org: 'Watching my cousins after school', type: 'family', counts: true, grades: [9,10], why: 'Family responsibilities count. Two years shows depth.' },
+  { id: 'c5', org: 'Algebra 1 class', counts: false, why: 'Classes don’t count. The deck is for things outside of class.' },
+  { id: 'c2', org: 'Usher board at church', type: 'faith', counts: true, grades: [9,10], why: 'Faith activities count. Two years shows commitment.' },
+  { id: 'c6', org: 'Playing video games with friends', counts: false, why: 'Hanging out doesn’t count. A gaming team or making videos would.' },
+  { id: 'c3', org: 'Selling snacks at games', type: 'job', counts: true, grades: [10], why: 'A side hustle is work experience.' },
+  { id: 'c8', org: 'Watching YouTube tutorials', counts: false, why: 'Not on its own. Using the skill for something would.' },
+  { id: 'c4', org: 'Church food drive', type: 'volunteer', counts: true, grades: [10], why: 'Volunteering counts, even one event.' },
+  { id: 'c7', org: 'Walking dogs for neighbors', type: 'job', counts: true, grades: [10], why: 'Getting paid by neighbors is a job.' },
+];
+const RANKS = [[0, 'Rookie Scout'], [60, 'Varsity Scout'], [100, 'Head Scout']];
+
+let ST = { podId: Math.random().toString(36).slice(2, 10), room: (QS.get('room') || '').toUpperCase(), myRank: null, podCount: 0, pod: '', started: false, count: { A: {}, B: {} }, rate: {}, sure: {}, revealed: {}, picks: new Set(), wrongTaps: new Set(),
+  points: [], me: null, done: false, anim: {}, timer: { k: null, left: 0, id: null } };
+
+// ── helpers ─────────────────────────────────────────────────────
+function esc(v) { return String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function ico(k, s) { const P = {
+  rubric: '<path d="M4 4h16v16H4z"/><path d="M8 8h8M8 12h8M8 16h5"/>',
+  deck: '<rect x="3" y="7" width="13" height="13" rx="2"/><path d="M7 7V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-3"/>',
+  up: '<path d="M12 19V5"/><path d="m5 12 7-7 7 7"/>', you: '<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>',
+  check: '<path d="m5 12 5 5 9-10"/>', x: '<path d="M6 6l12 12M18 6 6 18"/>', clock: '<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M9 2h6"/>',
+  star: '<path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>', lock: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>' }[k];
+  return `<svg width="${s||20}" height="${s||20}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P}</svg>`; }
+function stats(cards) {
+  const acts = cards.filter(c => c.type !== 'award');
+  const multi = acts.filter(c => (c.grades || []).length >= 2).length;
+  const lead = acts.filter(c => LEAD.includes(c.role)).length;
+  const awards = cards.filter(c => c.type === 'award').length;
+  let level = 1;
+  if (acts.length >= 5 && (multi >= 1 || lead >= 1)) level = 2;
+  if (acts.length >= 8 && multi >= 2) level = 3;
+  if (level === 3 && awards >= 5) level = 4;
+  return { acts: acts.length, multi, lead, awards, level };
+}
+function total() { return ST.points.reduce((a, p) => a + p.n, 0); }
+function rank(t) { let r = RANKS[0][1]; RANKS.forEach(([min, name]) => { if (t >= min) r = name; }); return r; }
+function award(n, label) { ST.points.push({ n, label }); ST.anim.toast = (ST.anim.toast || []).concat({ n, label }); }
+function reduced() { return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; }
+
+// ── pieces ──────────────────────────────────────────────────────
+function cardHTML(c, i, deal) {
+  const g = (c.grades || []).slice().sort((a,b)=>a-b);
+  return `<div class="fy-card rd-card${deal ? ' deal' : ''}${c.type === 'award' ? ' award' : ''}" style="--i:${i}">
+    <div class="rd-card-type">${esc(TYPE[c.type] || '')}</div>
+    <div class="fy-card-org">${esc(c.org)}</div>
+    ${c.role ? `<div class="fy-card-role">${esc(c.role)}</div>` : ''}
+    ${(c.verbs || []).length ? `<div class="fy-card-verbs">${c.verbs.map(v => `<span>${esc(v)}</span>`).join('')}</div>` : ''}
+    ${c.type === 'award' ? '' : `<div class="fy-card-flex${c.flex ? '' : ' empty'}">${c.flex ? esc(c.flex) : 'No review'}</div>`}
+    <div class="fy-card-meta">${g.length ? `<span class="fy-tag${g.length > 1 ? ' multi' : ''}">Grade ${g.join(', ')}</span>` : ''}${c.hours ? `<span class="fy-tag">${c.hours} hrs/wk</span>` : ''}</div></div>`;
+}
+function head(n, key, title, sub) {
+  return `<div class="fy-sec-head"><div class="fy-sec-badge">${ico(key)}</div><div class="fy-sec-titles"><div class="fy-sec-kicker">Round ${n} of 5</div><h3 class="fy-sec-title">${title}</h3></div></div>${sub ? `<div class="fy-hint rd-sub">${sub}</div>` : ''}`;
+}
+function scoreboard() {
+  const t = total();
+  return `<div class="rd-score" id="rd-score">
+    <div class="rd-score-who">${ico('star', 18)}<span>${esc(ST.pod || 'Scout')}</span></div>
+    <div class="rd-score-pts"><b id="rd-pts">${t}</b> pts</div>
+    ${ST.myRank ? `<div class="rd-score-place">#${ST.myRank}<small> of ${ST.podCount}</small></div>` : ''}
+    <div class="rd-score-rank">${rank(t)}</div>
+    ${ST.timer.k ? `<div class="rd-timer${ST.timer.left <= 10 ? ' low' : ''}">${ico('clock', 16)}<span id="rd-timer-left">${ST.timer.left}</span>s</div>` : ''}
+  </div>`;
+}
+function startScreen() {
+  return `<div class="fy-hero rd-hero">
+      <div class="fy-hero-kicker">Future You · Practice</div>
+      <div class="rd-stack" aria-hidden="true"><i></i><i></i><i><b>?</b></i></div>
+      <div class="fy-hero-title">Rate the Deck</div>
+      <div class="fy-hero-sub">You're the scout. Read two Fellows' decks, rate them with BRYC's rubric, and earn points for getting it right.</div>
+      <div class="rd-start">
+        <input type="text" id="rd-pod" class="text-input" placeholder="Your names or pod name" value="${esc(ST.pod)}" maxlength="40">
+        <input type="text" id="rd-room" class="text-input rd-room-in" placeholder="Room code" value="${esc(ST.room)}" maxlength="20">
+        <button class="fy-btn rd-go" data-act="start">Start scouting →</button>
+      </div>
+      <div class="rd-howto"><span><b>+5</b> each count you get right</span><span><b>+20</b> exact rating</span><span><b>+10</b> bonus if you were certain and right</span><span><b>−5</b> certain and wrong</span></div>
+    </div>
+    <div class="rd-fac">Facilitator: pick a room code, write it on the board, then <a href="#" data-act="openboard">open the leaderboard</a> on the projector.</div>`;
+}
+function rubricHTML() {
+  return `<div class="fy-sec">${head(1, 'rubric', "Learn the rubric", 'Activities are anything you do outside of class. Awards are counted separately.')}
+    <div class="card rd-rubric">${RUBRIC.map(r => `<div class="rd-lv"><b>${r.n}</b><div><strong>${r.label}</strong><span>${r.need}</span></div></div>`).join('')}</div></div>`;
+}
+function deckSection(key, n) {
+  const D = DECKS[key]; const s = stats(D.cards); const shown = ST.revealed[key]; const cnt = ST.count[key]; const pick = ST.rate[key];
+  const deal = ST.anim.deal === key;
+  const counted = STATS.every(([id]) => cnt[id] !== undefined);
+  const ready = counted && pick && ST.sure[key];
+  const timerOn = ST.timer.k === key;
+  return `<div class="fy-sec" id="sec-${key}">${head(n, 'deck', `Scout ${D.who}`, `${esc(D.grade)} · Read every card.`)}
+    <div class="card">
+      ${shown ? '' : `<div class="rd-timer-row">${timerOn ? `<span class="fy-hint" style="margin:0;">Timer running. Lock it in before it hits zero.</span>` : `<button class="fy-btn ghost rd-sm" data-act="timer" data-k="${key}">${ico('clock', 16)} Start ${TIMER_SECONDS}-second timer</button>`}</div>`}
+      <div class="fy-deck rd-deck">${D.cards.map((c, i) => cardHTML(c, i, deal)).join('')}</div>
+
+      <div class="rd-step"><span>1</span>Count it</div>
+      <div class="rd-counts">${STATS.map(([id, l]) => { const v = cnt[id]; const right = s[id];
+        const st = shown ? (v === right ? 'ok' : 'off') : '';
+        return `<div class="rd-count ${st}"><div class="rd-count-l">${l}</div>
+          <div class="rd-count-ctl"><button data-act="dec" data-k="${key}" data-id="${id}" ${shown?'disabled':''} aria-label="Less">−</button><b>${v === undefined ? '?' : v}</b><button data-act="inc" data-k="${key}" data-id="${id}" ${shown?'disabled':''} aria-label="More">+</button></div>
+          ${shown ? `<div class="rd-count-ans">${v === right ? ico('check', 14) + ' Right' : 'It’s ' + right}</div>` : ''}</div>`; }).join('')}</div>
+
+      <div class="rd-step"><span>2</span>Rate it</div>
+      <div class="fy-level">${RUBRIC.map(r => `<button class="fy-lv${pick===r.n?' on':''}${shown && r.n===D.answer?' answer':''}" data-act="rate" data-k="${key}" data-n="${r.n}" ${shown?'disabled':''}><b>${r.n}</b><span>${r.label}</span></button>`).join('')}</div>
+
+      <div class="rd-step"><span>3</span>How sure are you?</div>
+      <div class="fy-chips">${SURE.map(([id, l]) => `<button class="fy-chip${ST.sure[key]===id?' on':''}" data-act="sure" data-k="${key}" data-id="${id}" ${shown?'disabled':''}>${l}</button>`).join('')}</div>
+
+      ${shown ? `<div class="fy-rating rd-reveal${ST.anim.reveal === key ? ' flip' : ''}">
+          <div class="fy-rating-num"><small>Rating</small>${D.answer}<em>${RUBRIC[D.answer-1].label}</em></div>
+          <div class="fy-rating-body"><div class="fy-rating-src">${pick === D.answer ? 'Nailed it' : Math.abs(pick - D.answer) === 1 ? 'So close. You said ' + pick : 'You said ' + pick}</div>
+            <div class="fy-rating-msg">${esc(D.why)}</div>
+            <div class="fy-rating-next">${esc(D.whyNot)}</div></div></div>`
+        : `<div class="fy-done-row"><span class="fy-hint" style="margin:0;">${ready ? 'Talk it over with your partner.' : 'Count, rate, and pick how sure you are.'}</span>
+           <button class="fy-btn dark rd-lock" data-act="check" data-k="${key}" ${ready?'':'disabled'}>${ico('lock', 16)} Lock it in</button></div>`}
+    </div></div>`;
+}
+function levelUpSection() {
+  const base = DECKS.B.cards; const added = CANDIDATES.filter(c => ST.picks.has(c.id) && c.counts);
+  const s0 = stats(base); const s = stats([...base, ...added.map(c => ({ org: c.org, type: c.type, role: 'Member', grades: c.grades }))]);
+  const pct = Math.min(100, s.acts / 10 * 100);
+  return `<div class="fy-sec" id="sec-up">${head(4, 'up', 'Level up Fellow B', 'Fellow B left things out. Tap what belongs in their deck. Wrong picks cost points.')}
+    <div class="card">
+      <div class="rd-cands">${CANDIDATES.map(c => { const on = ST.picks.has(c.id) || ST.wrongTaps.has(c.id);
+        const cls = on ? (c.counts ? ' yes' : ' no') : ''; const fx = ST.anim.cand === c.id ? (c.counts ? ' pop' : ' shake') : '';
+        return `<button class="rd-cand${cls}${fx}" data-act="cand" data-id="${c.id}" ${on && !c.counts ? 'disabled' : ''}>
+          <div class="rd-cand-top"><b>${esc(c.org)}</b>${on ? `<span>${c.counts ? ico('check', 16) + ' +5' : ico('x', 16) + ' −3'}</span>` : ''}</div>
+          ${on ? `<div class="rd-cand-why">${esc(c.why)}</div>` : ''}</button>`; }).join('')}</div>
+      <div class="rd-lvl${ST.anim.levelup ? ' bump' : ''}">
+        <div class="rd-lvl-num"><small>Fellow B</small><b>${s.level}</b><em>${RUBRIC[s.level-1].label}</em></div>
+        <div class="rd-lvl-body">
+          <div class="rd-bar"><i style="width:${pct}%"></i><span class="m" style="left:50%">5</span><span class="m" style="left:80%">8</span></div>
+          <div class="rd-lvl-stats"><span><b>${s.acts}</b> activities</span><span><b>${s.multi}</b> more than one year</span><span><b>${s.lead}</b> leadership</span></div>
+          ${s.level > s0.level ? `<div class="rd-lvl-msg">Same Fellow, same life. The only thing that changed is what got written down.</div>` : `<div class="rd-lvl-msg dim">Started at Level ${s0.level}. What else does Fellow B do?</div>`}
+        </div>
+        ${ST.anim.levelup ? `<div class="rd-levelup">LEVEL UP</div>` : ''}
+      </div>
+      ${!ST.done ? `<div class="fy-done-row"><span></span><button class="fy-btn dark" data-act="finish">I'm done →</button></div>` : ''}
+    </div></div>`;
+}
+function youSection() {
+  const t = total(); const exact = ['A','B'].filter(k => ST.rate[k] === DECKS[k].answer).length;
+  return `<div class="fy-sec" id="sec-you">${head(5, 'you', 'Your turn')}
+    <div class="rd-badge${ST.anim.badge ? ' in' : ''}">
+      <div class="rd-badge-star">${ico('star', 30)}</div>
+      <div><div class="rd-badge-rank">${rank(t)}</div><div class="rd-badge-who">${esc(ST.pod || 'Scout')} · <b>${t}</b> pts · ${exact} of 2 ratings exact</div></div>
+    </div>
+    <div class="card">
+      <div class="fy-q" style="margin-top:0;">Now scout yourself. What level is your deck right now?</div>
+      <div class="fy-level">${RUBRIC.map(r => `<button class="fy-lv${ST.me===r.n?' on':''}" data-act="me" data-n="${r.n}"><b>${r.n}</b><span>${r.label}</span></button>`).join('')}</div>
+      <div class="fy-q">What might be missing from your deck, like Fellow B?</div>
+      <div class="fy-hint">Home, church, money you make, people you take care of, BRYC.</div>
+      ${FUTURE_YOU_URL ? `<a class="fy-btn dark" style="display:inline-block;margin-top:14px;text-decoration:none;" href="${esc(FUTURE_YOU_URL)}" target="_blank" rel="noopener">Build my deck →</a>` : `<div class="fy-hint" style="margin-top:14px;"><b>Next:</b> open your Future You page and go to Build your deck.</div>`}
+    </div></div>`;
+}
+
+// ── render ──────────────────────────────────────────────────────
+function render() {
+  const root = document.getElementById('rd-root');
+  if (!ST.started) { root.innerHTML = startScreen(); return; }
+  root.innerHTML = scoreboard() + `
+    <div class="fy-hero rd-hero sm"><div class="fy-hero-kicker">Future You · Practice</div><div class="fy-hero-title">Rate the Deck</div></div>
+    ${rubricHTML()}
+    ${deckSection('A', 2)}
+    ${ST.revealed.A ? deckSection('B', 3) : ''}
+    ${ST.revealed.B ? levelUpSection() : ''}
+    ${ST.done ? youSection() : ''}`;
+  (ST.anim.toast || []).forEach((p, i) => toast(p, i));
+  if (ST.anim.confetti) confetti();
+  ST.anim = {};
+}
+function toast(p, i) {
+  const el = document.createElement('div'); el.className = 'rd-toast' + (p.n < 0 ? ' neg' : '');
+  el.textContent = (p.n > 0 ? '+' : '') + p.n + ' · ' + p.label; el.style.setProperty('--d', (i * 0.25) + 's'); el.style.top = (70 + i * 50) + 'px';
+  document.body.appendChild(el); setTimeout(() => el.remove(), 2400 + i * 250);
+}
+function confetti() {
+  if (reduced()) return;
+  const colors = ['#f0c917', '#1a1a1a', '#ed125f', '#5fbf7a', '#5b9be0'];
+  for (let i = 0; i < 70; i++) {
+    const c = document.createElement('i'); c.className = 'rd-conf';
+    c.style.left = Math.random() * 100 + 'vw'; c.style.background = colors[i % colors.length];
+    c.style.setProperty('--x', (Math.random() * 200 - 100) + 'px'); c.style.setProperty('--r', (Math.random() * 720) + 'deg');
+    c.style.animationDelay = Math.random() * 0.3 + 's'; c.style.width = (6 + Math.random() * 6) + 'px';
+    document.body.appendChild(c); setTimeout(() => c.remove(), 2200);
+  }
+}
+function stopTimer() { clearInterval(ST.timer.id); ST.timer = { k: null, left: 0, id: null }; }
+function startTimer(k) {
+  stopTimer(); ST.timer = { k, left: TIMER_SECONDS, id: setInterval(() => {
+    ST.timer.left--; const el = document.getElementById('rd-timer-left'); if (el) el.textContent = Math.max(0, ST.timer.left);
+    const box = el && el.parentElement; if (box && ST.timer.left <= 10) box.classList.add('low');
+    if (ST.timer.left <= 0) { stopTimer(); const y = window.scrollY; render(); window.scrollTo(0, y); }
+  }, 1000) };
+}
+function check(k) {
+  const D = DECKS[k]; const s = stats(D.cards); const cnt = ST.count[k];
+  let right = 0; STATS.forEach(([id]) => { if (cnt[id] === s[id]) right++; });
+  if (right) award(right * 5, `${right} count${right > 1 ? 's' : ''} right`);
+  const pick = ST.rate[k]; const sure = ST.sure[k];
+  if (pick === D.answer) { award(20, 'Exact rating'); if (sure === 'certain') award(10, 'Certain and right'); ST.anim.confetti = true; }
+  else { if (Math.abs(pick - D.answer) === 1) award(5, 'Off by one'); if (sure === 'certain') award(-5, 'Certain but wrong'); }
+  ST.revealed[k] = true; ST.anim.reveal = k; if (ST.timer.k === k) stopTimer();
+  if (k === 'A') ST.anim.deal = 'B';
+}
+
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-act]'); if (!t || t.disabled) return;
+  const k = t.dataset.k; const a = t.dataset.act; let scrollTo = null;
+  if (a === 'openboard') { e.preventDefault(); const r = (document.getElementById('rd-room')?.value || 'BRYC').trim().toUpperCase() || 'BRYC'; window.open(location.pathname + '?board=1&room=' + encodeURIComponent(r), '_blank'); return; }
+  if (a === 'start') { ST.pod = (document.getElementById('rd-pod')?.value || '').trim(); ST.room = ((document.getElementById('rd-room')?.value || '').trim() || 'BRYC').toUpperCase(); ST.started = true; ST.anim.deal = 'A'; startRankPoll(); }
+  if (a === 'timer') { startTimer(k); }
+  if (a === 'inc' || a === 'dec') { // update in place so fast taps never get lost to a re-render
+    const c = ST.count[k]; const v = c[t.dataset.id]; c[t.dataset.id] = Math.max(0, Math.min(15, (v === undefined ? 0 : v) + (a === 'inc' ? 1 : -1)));
+    const box = t.closest('.rd-count-ctl'); if (box) box.querySelector('b').textContent = c[t.dataset.id];
+    const ready = STATS.every(([id]) => c[id] !== undefined) && ST.rate[k] && ST.sure[k];
+    const lock = document.querySelector(`[data-act="check"][data-k="${k}"]`); if (lock) lock.disabled = !ready;
+    return; }
+  if (a === 'rate') ST.rate[k] = parseInt(t.dataset.n);
+  if (a === 'sure') ST.sure[k] = t.dataset.id;
+  if (a === 'check') { check(k); scrollTo = k === 'A' ? 'sec-B' : 'sec-up'; }
+  if (a === 'cand') {
+    const c = CANDIDATES.find(x => x.id === t.dataset.id); const before = stats([...DECKS.B.cards, ...CANDIDATES.filter(x => ST.picks.has(x.id) && x.counts).map(x => ({ type: x.type, grades: x.grades, role: 'Member' }))]).level;
+    if (c.counts) {
+      if (ST.picks.has(c.id)) { ST.picks.delete(c.id); award(-5, 'Card removed'); }
+      else { ST.picks.add(c.id); award(5, 'Belongs in the deck'); }
+    } else if (!ST.wrongTaps.has(c.id)) { ST.wrongTaps.add(c.id); award(-3, 'Doesn’t count'); }
+    ST.anim.cand = c.id;
+    const after = stats([...DECKS.B.cards, ...CANDIDATES.filter(x => ST.picks.has(x.id) && x.counts).map(x => ({ type: x.type, grades: x.grades, role: 'Member' }))]).level;
+    if (after > before) { ST.anim.levelup = true; ST.anim.confetti = true; }
+  }
+  if (a === 'finish') { ST.done = true; ST.anim.badge = true; scrollTo = 'sec-you'; }
+  if (a === 'me') ST.me = parseInt(t.dataset.n);
+  const y = window.scrollY; render(); window.scrollTo(0, y);
+  if (ST.started && a !== 'timer') sync();
+  if (scrollTo) setTimeout(() => document.getElementById(scrollTo)?.scrollIntoView({ behavior: reduced() ? 'auto' : 'smooth', block: 'start' }), 900);
+});
+document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'rd-pod') document.querySelector('[data-act="start"]')?.click(); });
+
+// ══ LEADERBOARD ═══════════════════════════════════════════════════
+async function api(action, payload) {
+  if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes('PASTE_')) return localApi(action, payload);
+  try { const r = await fetch(APPS_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action, ...payload }) }); return await r.json(); }
+  catch (e) { return { ok: false }; }
+}
+function localApi(action, p) { // demo mode: shares data between tabs in this browser only
+  const key = 'rtd_board_' + p.room; let all = {}; try { all = JSON.parse(localStorage.getItem(key) || '{}'); } catch (e) {}
+  if (action === 'submit') { all[p.podId] = { ...p, updated: Date.now() }; try { localStorage.setItem(key, JSON.stringify(all)); } catch (e) {} return { ok: true }; }
+  if (action === 'board') return { ok: true, pods: Object.values(all) };
+  return { ok: false };
+}
+function round() { return ST.done ? 5 : ST.revealed.B ? 4 : ST.revealed.A ? 3 : 2; }
+function countsRight(k) { const s = stats(DECKS[k].cards); return ST.revealed[k] ? STATS.filter(([id]) => ST.count[k][id] === s[id]).length : null; }
+let _syncT = null;
+function sync() {
+  clearTimeout(_syncT);
+  _syncT = setTimeout(() => api('submit', { room: ST.room, podId: ST.podId, pod: ST.pod || 'Scout', score: total(), round: round(),
+    rateA: ST.revealed.A ? ST.rate.A : '', sureA: ST.revealed.A ? ST.sure.A : '', countsA: countsRight('A'),
+    rateB: ST.revealed.B ? ST.rate.B : '', sureB: ST.revealed.B ? ST.sure.B : '', countsB: countsRight('B'),
+    picks: [...ST.picks].map(id => CANDIDATES.find(c => c.id === id).org), wrongPicks: [...ST.wrongTaps].map(id => CANDIDATES.find(c => c.id === id).org),
+    selfGuess: ST.me || '', done: ST.done }), 400);
+}
+function rankPods(pods) {
+  return pods.slice().sort((a, b) => (Number(b.score) - Number(a.score)) || (Number(b.round) - Number(a.round)) || (Number(a.updated) - Number(b.updated)));
+}
+let _rankT = null;
+function startRankPoll() {
+  clearInterval(_rankT);
+  const tick = async () => { const r = await api('board', { room: ST.room }); if (!r || !r.ok) return;
+    const ranked = rankPods(r.pods || []); const i = ranked.findIndex(p => p.podId === ST.podId);
+    ST.myRank = i >= 0 ? i + 1 : null; ST.podCount = ranked.length;
+    const el = document.querySelector('.rd-score-place'); const html = ST.myRank ? `#${ST.myRank}<small> of ${ST.podCount}</small>` : '';
+    if (el) el.innerHTML = html; else if (ST.myRank) { const rk = document.querySelector('.rd-score-rank'); if (rk) rk.insertAdjacentHTML('beforebegin', `<div class="rd-score-place">${html}</div>`); } };
+  setTimeout(tick, 1500); _rankT = setInterval(tick, 8000);
+}
+
+// ── projector view: rate-the-deck.html?board=1&room=CODE ─────────
+let BOARD = { room: '', pods: [], prev: {} };
+function bootBoard() {
+  document.body.classList.add('rd-board-mode');
+  BOARD.room = (QS.get('room') || 'BRYC').toUpperCase();
+  const link = location.origin + location.pathname + '?room=' + encodeURIComponent(BOARD.room);
+  document.getElementById('rd-root').innerHTML = `
+    <div class="bd-top">
+      <div><div class="fy-hero-kicker">Rate the Deck · Live</div><div class="bd-title">Leaderboard</div></div>
+      <div class="bd-room"><small>Room code</small><b>${esc(BOARD.room)}</b></div>
+    </div>
+    <div class="bd-grid">
+      <div class="bd-main"><div class="bd-list" id="bd-list"></div><div class="bd-empty" id="bd-empty">Waiting for pods to join. Open the game and enter room code <b>${esc(BOARD.room)}</b>.</div></div>
+      <div class="bd-side" id="bd-side"></div>
+    </div>
+    <div class="bd-foot">Players: <span>${esc(link.replace(/^file:\/\//, ''))}</span></div>`;
+  const tick = async () => { const r = await api('board', { room: BOARD.room }); if (r && r.ok) { BOARD.pods = r.pods || []; drawBoard(); } };
+  tick(); setInterval(tick, 4000);
+  window.addEventListener('storage', tick);
+}
+function drawBoard() {
+  const ranked = rankPods(BOARD.pods); const list = document.getElementById('bd-list'); const ROW = 64;
+  document.getElementById('bd-empty').style.display = ranked.length ? 'none' : '';
+  list.style.height = (ranked.length * ROW) + 'px';
+  const max = Math.max(1, ...ranked.map(p => Number(p.score) || 0));
+  const seen = new Set();
+  ranked.forEach((p, i) => {
+    seen.add(p.podId);
+    let row = list.querySelector(`[data-pod="${CSS.escape(p.podId)}"]`);
+    const isNew = !row;
+    if (isNew) { row = document.createElement('div'); row.className = 'bd-row new'; row.dataset.pod = p.podId; list.appendChild(row); setTimeout(() => row.classList.remove('new'), 600); }
+    const prev = BOARD.prev[p.podId]; const up = prev && prev.rank > i + 1; const gained = prev && Number(p.score) > prev.score;
+    row.style.top = (i * ROW) + 'px';
+    row.className = 'bd-row' + (i < 3 ? ' top' + (i + 1) : '') + (up ? ' up' : '') + (isNew ? ' new' : '');
+    const rounds = [1,2,3,4,5].map(n => `<i class="${Number(p.round) > n || (n === 5 && p.done) ? 'on' : Number(p.round) === n ? 'now' : ''}"></i>`).join('');
+    row.innerHTML = `<div class="bd-rank">${i + 1}</div><div class="bd-pod"><b>${esc(p.pod)}</b><div class="bd-rounds">${rounds}</div></div>
+      <div class="bd-bar"><span style="width:${(Number(p.score) || 0) / max * 100}%"></span></div><div class="bd-pts${gained ? ' bump' : ''}">${Number(p.score) || 0}</div>`;
+    BOARD.prev[p.podId] = { rank: i + 1, score: Number(p.score) || 0 };
+  });
+  list.querySelectorAll('.bd-row').forEach(r => { if (!seen.has(r.dataset.pod)) r.remove(); });
+  drawSide(ranked);
+}
+function drawSide(pods) {
+  const pctOf = (arr, test) => arr.length ? Math.round(arr.filter(test).length / arr.length * 100) : null;
+  const doneA = pods.filter(p => p.rateA); const doneB = pods.filter(p => p.rateB);
+  const dist = (arr, key) => [1,2,3,4].map(n => ({ n, c: arr.filter(p => Number(p[key]) === n).length }));
+  const bars = (arr, key, ans) => { const d = dist(arr, key); const m = Math.max(1, ...d.map(x => x.c));
+    return `<div class="bd-dist">${d.map(x => `<div class="${x.n === ans ? 'ans' : ''}"><span style="height:${x.c / m * 100}%"></span><b>${x.c}</b><em>${x.n}</em></div>`).join('')}</div>`; };
+  const wrong = {}; pods.forEach(p => (Array.isArray(p.wrongPicks) ? p.wrongPicks : String(p.wrongPicks || '').split(/;\s*/)).forEach(w => { w = String(w).trim(); if (w) wrong[w] = (wrong[w] || 0) + 1; }));
+  const topWrong = Object.entries(wrong).sort((a, b) => b[1] - a[1])[0];
+  const finished = pods.filter(p => p.done === true || p.done === 'yes').length;
+  document.getElementById('bd-side').innerHTML = `
+    <div class="bd-card"><small>Pods</small><b>${pods.length}</b><span>${finished} finished</span></div>
+    <div class="bd-card"><small>Fellow A · answer 3</small>${doneA.length ? `<b>${pctOf(doneA, p => Number(p.rateA) === 3)}%</b><span>of pods got it exact</span>${bars(doneA, 'rateA', 3)}` : '<span>No ratings yet</span>'}</div>
+    <div class="bd-card"><small>Fellow B · answer 1</small>${doneB.length ? `<b>${pctOf(doneB, p => Number(p.rateB) === 1)}%</b><span>of pods got it exact</span>${bars(doneB, 'rateB', 1)}` : '<span>No ratings yet</span>'}</div>
+    ${topWrong ? `<div class="bd-card"><small>Most-picked wrong card</small><div class="bd-wrong">${esc(topWrong[0])}</div><span>${topWrong[1]} pod${topWrong[1] > 1 ? 's' : ''}. Ask: why doesn't it count?</span></div>` : ''}`;
+}
+
+if (QS.get('board')) bootBoard(); else render();
+</script></body></html>
